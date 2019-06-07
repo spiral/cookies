@@ -13,7 +13,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Spiral\Cookies\Config\CookieConfig;
+use Spiral\Cookies\Config\CookiesConfig;
 use Spiral\Cookies\Cookie;
 use Spiral\Cookies\CookieQueue;
 use Spiral\Core\ScopeInterface;
@@ -28,7 +28,7 @@ use Spiral\Encrypter\Exception\EncryptException;
  */
 final class CookiesMiddleware implements MiddlewareInterface
 {
-    /** @var CookieConfig */
+    /** @var CookiesConfig */
     private $config = null;
 
     /** @var ScopeInterface */
@@ -38,12 +38,12 @@ final class CookiesMiddleware implements MiddlewareInterface
     private $encryption = null;
 
     /**
-     * @param CookieConfig        $config
+     * @param CookiesConfig       $config
      * @param ScopeInterface      $scope
      * @param EncryptionInterface $encryption
      */
     public function __construct(
-        CookieConfig $config,
+        CookiesConfig $config,
         ScopeInterface $scope,
         EncryptionInterface $encryption
     ) {
@@ -110,7 +110,7 @@ final class CookiesMiddleware implements MiddlewareInterface
             return false;
         }
 
-        return $this->config->getProtectionMethod() != CookieConfig::COOKIE_UNPROTECTED;
+        return $this->config->getProtectionMethod() != CookiesConfig::COOKIE_UNPROTECTED;
     }
 
     /**
@@ -119,7 +119,7 @@ final class CookiesMiddleware implements MiddlewareInterface
      */
     private function decodeCookie($cookie)
     {
-        if ($this->config->getProtectionMethod() == CookieConfig::COOKIE_ENCRYPT) {
+        if ($this->config->getProtectionMethod() == CookiesConfig::COOKIE_ENCRYPT) {
             $encrypter = $this->encryption->getEncrypter();
             try {
                 if (is_array($cookie)) {
@@ -133,7 +133,7 @@ final class CookiesMiddleware implements MiddlewareInterface
         }
 
         //HMAC
-        $hmac = substr($cookie, -1 * CookieConfig::MAC_LENGTH);
+        $hmac = substr($cookie, -1 * CookiesConfig::MAC_LENGTH);
         $value = substr($cookie, 0, strlen($cookie) - strlen($hmac));
 
         if ($this->hmacSign($value) != $hmac) {
@@ -152,7 +152,7 @@ final class CookiesMiddleware implements MiddlewareInterface
     private function hmacSign($value): string
     {
         return hash_hmac(
-            CookieConfig::HMAC_ALGORITHM,
+            CookiesConfig::HMAC_ALGORITHM,
             $value,
             $this->encryption->getKey()
         );
@@ -193,7 +193,7 @@ final class CookiesMiddleware implements MiddlewareInterface
      */
     private function encodeCookie(Cookie $cookie): Cookie
     {
-        if ($this->config->getProtectionMethod() == CookieConfig::COOKIE_ENCRYPT) {
+        if ($this->config->getProtectionMethod() == CookiesConfig::COOKIE_ENCRYPT) {
             $encrypter = $this->encryption->getEncrypter();
 
             return $cookie->withValue($encrypter->encrypt($cookie->getValue()));

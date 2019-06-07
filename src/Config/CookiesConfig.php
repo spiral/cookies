@@ -12,9 +12,9 @@ namespace Spiral\Cookies\Config;
 use Psr\Http\Message\UriInterface;
 use Spiral\Core\InjectableConfig;
 
-final class CookieConfig extends InjectableConfig
+final class CookiesConfig extends InjectableConfig
 {
-    const CONFIG = 'cookie';
+    const CONFIG = 'cookies';
 
     /**
      * Cookie protection methods.
