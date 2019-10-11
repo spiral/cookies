@@ -330,10 +330,10 @@ class CookiesTest extends TestCase
         foreach ($response->getHeaders() as $line) {
             $cookie = explode('=', join('', $line));
             $result[$cookie[0]] = rawurldecode(substr(
-                    (string)$cookie[1],
-                    0,
-                    (int)strpos((string)$cookie[1], ';'))
-            );
+                (string)$cookie[1],
+                0,
+                (int)strpos((string)$cookie[1], ';')
+            ));
         }
 
         return $result;
