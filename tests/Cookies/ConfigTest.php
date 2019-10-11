@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Spiral Framework.
  *
@@ -14,7 +17,7 @@ use Zend\Diactoros\Uri;
 
 class ConfigTest extends TestCase
 {
-    public function testCookies()
+    public function testCookies(): void
     {
         $c = new CookiesConfig([
             'domain'   => '.%s',
@@ -27,7 +30,7 @@ class ConfigTest extends TestCase
         $this->assertSame(['PHPSESSID', 'csrf-token'], $c->getExcludedCookies());
     }
 
-    public function testCookieDomain()
+    public function testCookieDomain(): void
     {
         $c = new CookiesConfig([
             'domain' => '.%s',

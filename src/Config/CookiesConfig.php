@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Spiral Framework.
  *
@@ -14,7 +15,7 @@ use Spiral\Core\InjectableConfig;
 
 final class CookiesConfig extends InjectableConfig
 {
-    const CONFIG = 'cookies';
+    public const CONFIG = 'cookies';
 
     /**
      * Cookie protection methods.

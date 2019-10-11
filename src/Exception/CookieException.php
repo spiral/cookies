@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Spiral Framework.
  *
@@ -11,5 +12,4 @@ namespace Spiral\Http\Exception;
 
 class CookieException extends \RuntimeException
 {
-
 }

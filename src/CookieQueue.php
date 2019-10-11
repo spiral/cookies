@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Spiral Framework.
  *
@@ -9,7 +10,7 @@ declare(strict_types=1);
 
 namespace Spiral\Cookies;
 
-class CookieQueue
+final class CookieQueue
 {
     public const ATTRIBUTE = 'cookieQueue';
 
@@ -117,7 +118,7 @@ class CookieQueue
      *
      * @param string $name
      */
-    public function delete(string $name)
+    public function delete(string $name): void
     {
         foreach ($this->scheduled as $index => $cookie) {
             if ($cookie->getName() == $name) {

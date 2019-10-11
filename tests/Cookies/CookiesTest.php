@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Spiral Framework.
  *
@@ -10,11 +13,12 @@ namespace Spiral\Cookies\Tests;
 
 use Defuse\Crypto\Key;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Spiral\Cookies\Config\CookiesConfig;
 use Spiral\Cookies\CookieQueue;
 use Spiral\Cookies\Middleware\CookiesMiddleware;
+use Spiral\Cookies\Tests\Cookies\TestResponseFactory;
 use Spiral\Core\Container;
 use Spiral\Encrypter\Config\EncrypterConfig;
 use Spiral\Encrypter\Encrypter;
@@ -24,14 +28,13 @@ use Spiral\Encrypter\EncryptionInterface;
 use Spiral\Http\Config\HttpConfig;
 use Spiral\Http\Http;
 use Spiral\Http\Pipeline;
-use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 
 class CookiesTest extends TestCase
 {
     private $container;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->container = new Container();
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
@@ -51,18 +54,19 @@ class CookiesTest extends TestCase
         $this->container->bind(EncrypterInterface::class, Encrypter::class);
     }
 
-    public function testScope()
+    public function testScope(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-
             $this->assertInstanceOf(
                 CookieQueue::class,
-                $this->container->get(CookieQueue::class)
+                $this->container->get(ServerRequestInterface::class)
+                    ->getAttribute(CookieQueue::ATTRIBUTE)
             );
 
             $this->assertSame(
-                $this->container->get(CookieQueue::class),
+                $this->container->get(ServerRequestInterface::class)
+                    ->getAttribute(CookieQueue::ATTRIBUTE),
                 $r->getAttribute(CookieQueue::ATTRIBUTE)
             );
 
@@ -74,11 +78,12 @@ class CookiesTest extends TestCase
         $this->assertSame('all good', (string)$response->getBody());
     }
 
-    public function testSetEncryptedCookie()
+    public function testSetEncryptedCookie(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-            $this->container->get(CookieQueue::class)->set('name', 'value');
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
@@ -89,15 +94,18 @@ class CookiesTest extends TestCase
 
         $cookies = $this->fetchCookies($response);
         $this->assertArrayHasKey('name', $cookies);
-        $this->assertSame('value',
-            $this->container->get(EncrypterInterface::class)->decrypt($cookies['name']));
+        $this->assertSame(
+            'value',
+            $this->container->get(EncrypterInterface::class)->decrypt($cookies['name'])
+        );
     }
 
-    public function testSetNotProtectedCookie()
+    public function testSetNotProtectedCookie(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-            $this->container->get(CookieQueue::class)->set('PHPSESSID', 'value');
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->set('PHPSESSID', 'value');
 
             return 'all good';
         });
@@ -111,7 +119,7 @@ class CookiesTest extends TestCase
         $this->assertSame('value', $cookies['PHPSESSID']);
     }
 
-    public function testDecrypt()
+    public function testDecrypt(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
@@ -129,7 +137,7 @@ class CookiesTest extends TestCase
         $this->assertSame('cookie-value', (string)$response->getBody());
     }
 
-    public function testDecryptArray()
+    public function testDecryptArray(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
@@ -147,8 +155,7 @@ class CookiesTest extends TestCase
         $this->assertSame('cookie-value', (string)$response->getBody());
     }
 
-
-    public function testDecryptBroken()
+    public function testDecryptBroken(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
@@ -166,12 +173,15 @@ class CookiesTest extends TestCase
         $this->assertSame('', (string)$response->getBody());
     }
 
-    public function testDelete()
+    public function testDelete(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-            $this->container->get(CookieQueue::class)->set('name', 'value');
-            $this->container->get(CookieQueue::class)->delete('name');
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
+
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->delete('name');
 
             return 'all good';
         });
@@ -185,7 +195,7 @@ class CookiesTest extends TestCase
         $this->assertSame('', $cookies['name']);
     }
 
-    public function testUnprotected()
+    public function testUnprotected(): void
     {
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
@@ -195,7 +205,8 @@ class CookiesTest extends TestCase
 
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-            $this->container->get(CookieQueue::class)->set('name', 'value');
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
@@ -209,7 +220,7 @@ class CookiesTest extends TestCase
         $this->assertSame('value', $cookies['name']);
     }
 
-    public function testGetUnprotected()
+    public function testGetUnprotected(): void
     {
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
@@ -233,7 +244,7 @@ class CookiesTest extends TestCase
         $this->assertSame('cookie-value', (string)$response->getBody());
     }
 
-    public function testHMAC()
+    public function testHMAC(): void
     {
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
@@ -243,7 +254,8 @@ class CookiesTest extends TestCase
 
         $core = $this->httpCore([CookiesMiddleware::class]);
         $core->setHandler(function ($r) {
-            $this->container->get(CookieQueue::class)->set('name', 'value');
+            $this->container->get(ServerRequestInterface::class)
+                ->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
@@ -262,7 +274,6 @@ class CookiesTest extends TestCase
         $response = $this->get($core, '/', [], [], $cookies);
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('value', (string)$response->getBody());
-
     }
 
     protected function httpCore(array $middleware = []): Http
@@ -306,7 +317,8 @@ class CookiesTest extends TestCase
             $uri,
             $method,
             'php://input',
-            $headers, $cookies,
+            $headers,
+            $cookies,
             $query
         );
     }
@@ -316,42 +328,14 @@ class CookiesTest extends TestCase
         $result = [];
 
         foreach ($response->getHeaders() as $line) {
-            $cookie = explode('=', join("", $line));
-            $result[$cookie[0]] = rawurldecode(substr($cookie[1], 0, strpos($cookie[1], ';')));
+            $cookie = explode('=', join('', $line));
+            $result[$cookie[0]] = rawurldecode(substr(
+                    (string)$cookie[1],
+                    0,
+                    (int)strpos((string)$cookie[1], ';'))
+            );
         }
 
         return $result;
-    }
-}
-
-final class TestResponseFactory implements ResponseFactoryInterface
-{
-    /** @var HttpConfig */
-    protected $config;
-
-    /**
-     * @param HttpConfig $config
-     */
-    public function __construct(HttpConfig $config)
-    {
-        $this->config = $config;
-    }
-
-    /**
-     * @param int    $code
-     * @param string $reasonPhrase
-     *
-     * @return ResponseInterface
-     */
-    public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
-    {
-        $response = new Response('php://memory', $code, []);
-        $response = $response->withStatus($code, $reasonPhrase);
-
-        foreach ($this->config->getBaseHeaders() as $header => $value) {
-            $response = $response->withAddedHeader($header, $value);
-        }
-
-        return $response;
     }
 }

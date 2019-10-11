@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Spiral Framework.
  *
@@ -137,6 +138,14 @@ final class Cookie
     }
 
     /**
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return $this->createHeader();
+    }
+
+    /**
      * The name of the cookie.
      *
      * @return string
@@ -225,14 +234,6 @@ final class Cookie
         $cookie->value = $value;
 
         return $cookie;
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString(): string
-    {
-        return $this->createHeader();
     }
 
     /**

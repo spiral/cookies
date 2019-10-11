@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * Spiral Framework.
  *
@@ -13,7 +16,7 @@ use Spiral\Cookies\Cookie;
 
 class CookieTest extends TestCase
 {
-    public function testAccess()
+    public function testAccess(): void
     {
         $cookie = new Cookie(
             'cookie',
@@ -33,7 +36,7 @@ class CookieTest extends TestCase
         $this->assertTrue($cookie->isHttpOnly());
     }
 
-    public function testCreateStaticAccess()
+    public function testCreateStaticAccess(): void
     {
         $cookie = Cookie::create(
             'cookie',
@@ -53,7 +56,7 @@ class CookieTest extends TestCase
         $this->assertTrue($cookie->isHttpOnly());
     }
 
-    public function testFallbackValues()
+    public function testFallbackValues(): void
     {
         $cookie = new Cookie(
             'cookie',
@@ -70,7 +73,7 @@ class CookieTest extends TestCase
         $this->assertNull($cookie->getDomain());
     }
 
-    public function testWithValue()
+    public function testWithValue(): void
     {
         $cookie = new Cookie(
             'cookie',
@@ -89,7 +92,7 @@ class CookieTest extends TestCase
         $this->assertSame('new-value', $cookie1->getValue());
     }
 
-    public function testPack()
+    public function testPack(): void
     {
         $cookie = new Cookie(
             'cookie',

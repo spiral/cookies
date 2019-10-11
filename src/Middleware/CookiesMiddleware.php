@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Spiral Framework.
  *
@@ -16,7 +17,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Spiral\Cookies\Config\CookiesConfig;
 use Spiral\Cookies\Cookie;
 use Spiral\Cookies\CookieQueue;
-use Spiral\Core\ScopeInterface;
 use Spiral\Encrypter\EncryptionInterface;
 use Spiral\Encrypter\Exception\DecryptException;
 use Spiral\Encrypter\Exception\EncryptException;
@@ -31,24 +31,16 @@ final class CookiesMiddleware implements MiddlewareInterface
     /** @var CookiesConfig */
     private $config = null;
 
-    /** @var ScopeInterface */
-    private $scope = null;
-
     /** @var EncryptionInterface */
     private $encryption = null;
 
     /**
      * @param CookiesConfig       $config
-     * @param ScopeInterface      $scope
      * @param EncryptionInterface $encryption
      */
-    public function __construct(
-        CookiesConfig $config,
-        ScopeInterface $scope,
-        EncryptionInterface $encryption
-    ) {
+    public function __construct(CookiesConfig $config, EncryptionInterface $encryption)
+    {
         $this->config = $config;
-        $this->scope = $scope;
         $this->encryption = $encryption;
     }
 
@@ -60,16 +52,11 @@ final class CookiesMiddleware implements MiddlewareInterface
         //Aggregates all user cookies
         $queue = new CookieQueue(
             $this->config->resolveDomain($request->getUri()),
-            $request->getUri()->getScheme() == "https"
+            $request->getUri()->getScheme() == 'https'
         );
 
-        $response = $this->scope->runScope(
-            [CookieQueue::class => $queue],
-            function () use ($request, $handler, $queue) {
-                return $handler->handle(
-                    $this->unpackCookies($request)->withAttribute(CookieQueue::ATTRIBUTE, $queue)
-                );
-            }
+        $response = $handler->handle(
+            $this->unpackCookies($request)->withAttribute(CookieQueue::ATTRIBUTE, $queue)
         );
 
         return $this->packCookies($response, $queue);
@@ -111,6 +98,35 @@ final class CookiesMiddleware implements MiddlewareInterface
         }
 
         return $this->config->getProtectionMethod() != CookiesConfig::COOKIE_UNPROTECTED;
+    }
+
+    /**
+     * Pack outcoming cookies with encrypted value.
+     *
+     * @param Response    $response
+     * @param CookieQueue $queue
+     * @return Response
+     *
+     * @throws EncryptException
+     */
+    protected function packCookies(Response $response, CookieQueue $queue): Response
+    {
+        if (empty($queue->getScheduled())) {
+            return $response;
+        }
+
+        $cookies = $response->getHeader('Set-Cookie');
+
+        foreach ($queue->getScheduled() as $cookie) {
+            if (!$this->isProtected($cookie->getName()) || empty($cookie->getValue())) {
+                $cookies[] = $cookie->createHeader();
+                continue;
+            }
+
+            $cookies[] = $this->encodeCookie($cookie)->createHeader();
+        }
+
+        return $response->withHeader('Set-Cookie', $cookies);
     }
 
     /**
@@ -156,35 +172,6 @@ final class CookiesMiddleware implements MiddlewareInterface
             $value,
             $this->encryption->getKey()
         );
-    }
-
-    /**
-     * Pack outcoming cookies with encrypted value.
-     *
-     * @param Response    $response
-     * @param CookieQueue $queue
-     * @return Response
-     *
-     * @throws EncryptException
-     */
-    protected function packCookies(Response $response, CookieQueue $queue): Response
-    {
-        if (empty($queue->getScheduled())) {
-            return $response;
-        }
-
-        $cookies = $response->getHeader('Set-Cookie');
-
-        foreach ($queue->getScheduled() as $cookie) {
-            if (!$this->isProtected($cookie->getName()) || empty($cookie->getValue())) {
-                $cookies[] = $cookie->createHeader();
-                continue;
-            }
-
-            $cookies[] = $this->encodeCookie($cookie)->createHeader();
-        }
-
-        return $response->withHeader('Set-Cookie', $cookies);
     }
 
     /**
