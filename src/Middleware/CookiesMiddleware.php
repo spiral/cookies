@@ -74,7 +74,6 @@ final class CookiesMiddleware implements MiddlewareInterface
 
         foreach ($cookies as $name => $cookie) {
             if (!$this->isProtected($name)) {
-                //Nothing to protect
                 continue;
             }
 
