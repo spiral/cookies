@@ -134,28 +134,27 @@ final class CookiesMiddleware implements MiddlewareInterface
      */
     private function decodeCookie($cookie)
     {
-        if ($this->config->getProtectionMethod() == CookiesConfig::COOKIE_ENCRYPT) {
-            $encrypter = $this->encryption->getEncrypter();
-            try {
-                if (is_array($cookie)) {
-                    return array_map([$this, 'decodeCookie'], $cookie);
-                }
-
-                return $encrypter->decrypt($cookie);
-            } catch (DecryptException $exception) {
-                return null;
+        try {
+            if (is_array($cookie)) {
+                return array_map([$this, 'decodeCookie'], $cookie);
             }
-        }
-
-        //HMAC
-        $hmac = substr($cookie, -1 * CookiesConfig::MAC_LENGTH);
-        $value = substr($cookie, 0, strlen($cookie) - strlen($hmac));
-
-        if ($this->hmacSign($value) != $hmac) {
+        } catch (DecryptException $exception) {
             return null;
         }
+        
+        switch($this->config->getProtectionMethod()) {
+            case CookiesConfig::COOKIE_ENCRYPT:
+                return $this->encryption->decrypt($cookie);
+            case CookiesConfig::COOKIE_HMAC:
+                $hmac = substr($cookie, -1 * CookiesConfig::MAC_LENGTH);
+                $value = substr($cookie, 0, strlen($cookie) - strlen($hmac));
 
-        return $value;
+                if (hash_equals($this->hmacSign($value), $hmac)) {
+                    return $value;
+                }
+        }
+       
+        return null;
     }
 
     /**
