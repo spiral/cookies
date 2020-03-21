@@ -148,9 +148,8 @@ final class CookiesMiddleware implements MiddlewareInterface
                 try {
                     return $this->encryption->getEncrypter()->decrypt($cookie);
                 } catch (DecryptException $e) {
-                    return null;
                 }
-
+                return null;
             case CookiesConfig::COOKIE_HMAC:
                 $hmac = substr($cookie, -1 * CookiesConfig::MAC_LENGTH);
                 $value = substr($cookie, 0, strlen($cookie) - strlen($hmac));
