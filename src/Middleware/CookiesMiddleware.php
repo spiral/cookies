@@ -6,6 +6,7 @@
  * @license   MIT
  * @author    Anton Titov (Wolfy-J)
  */
+
 declare(strict_types=1);
 
 namespace Spiral\Cookies\Middleware;
@@ -141,10 +142,15 @@ final class CookiesMiddleware implements MiddlewareInterface
         } catch (DecryptException $exception) {
             return null;
         }
-        
-        switch($this->config->getProtectionMethod()) {
+
+        switch ($this->config->getProtectionMethod()) {
             case CookiesConfig::COOKIE_ENCRYPT:
-                return $this->encryption->decrypt($cookie);
+                try {
+                    return $this->encryption->getEncrypter()->decrypt($cookie);
+                } catch (DecryptException $e) {
+                    return null;
+                }
+
             case CookiesConfig::COOKIE_HMAC:
                 $hmac = substr($cookie, -1 * CookiesConfig::MAC_LENGTH);
                 $value = substr($cookie, 0, strlen($cookie) - strlen($hmac));
@@ -153,7 +159,7 @@ final class CookiesMiddleware implements MiddlewareInterface
                     return $value;
                 }
         }
-       
+
         return null;
     }
 
