@@ -105,14 +105,51 @@ class CookieTest extends TestCase
         );
 
         $this->assertSame($cookie->createHeader(), (string)$cookie);
-        $this->assertContains(
+        $this->assertStringContainsString(
             'cookie=value;',
             $cookie->createHeader()
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             'Max-Age=100; Path=/; Domain=.domain.com; Secure; HttpOnly',
             $cookie->createHeader()
         );
+    }
+
+    /**
+     * @dataProvider sameSiteProvider
+     * @param             $expected
+     * @param bool        $secure
+     * @param string|null $sameSite
+     */
+    public function testSameSite($expected, bool $secure, ?string $sameSite): void
+    {
+        $cookie = new Cookie('', '', 0, '', '', $secure, false, $sameSite);
+        $this->assertSame($expected, $cookie->getSameSite());
+
+        if ($expected === null) {
+            $this->assertStringNotContainsString('SameSite=', $cookie->createHeader());
+        } else {
+            $this->assertStringContainsString("SameSite=$expected", $cookie->createHeader());
+        }
+    }
+
+    /**
+     * @return iterable
+     */
+    public function sameSiteProvider(): iterable
+    {
+        return [
+            [null, true, null],
+            [null, false, null],
+            [null, true, 'weird'],
+            [null, false, 'weird'],
+            ['Lax', true, 'lax'],
+            ['Lax', false, 'lax'],
+            ['Strict', true, 'strict'],
+            ['Strict', false, 'strict'],
+            ['None', true, 'none'],
+            ['Lax', false, 'none'],
+        ];
     }
 }
