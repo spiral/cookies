@@ -16,118 +16,123 @@ namespace Spiral\Cookies;
  */
 final class Cookie
 {
+    private const SAME_SITE_VALUES  = ['Strict', 'Lax', 'None'];
+    private const SAME_SITE_DEFAULT = 'Lax';
+    private const SAME_SITE_NONE    = 'None';
+
     /**
      * The name of the cookie.
      *
      * @var string
      */
-    private $name = '';
+    private $name;
 
     /**
-     * The value of the cookie. This value is stored on the clients computer; do not store sensitive
-     * information.
+     * The value of the cookie. This value is stored on the clients computer; do not store sensitive information.
      *
      * @var string|null
      */
-    private $value = null;
+    private $value;
 
     /**
-     * Cookie lifetime. This value specified in seconds and declares period of time in which cookie
-     * will expire relatively to current time() value.
+     * Cookie lifetime. This value specified in seconds and declares period of time in which cookie will expire
+     * relatively to current time() value.
      *
      * @var int|null
      */
-    private $lifetime = null;
+    private $lifetime;
 
     /**
      * The path on the server in which the cookie will be available on.
-     *
-     * If set to '/', the cookie will be available within the entire domain. If set to '/foo/',
-     * the cookie will only be available within the /foo/ directory and all sub-directories such as
-     * /foo/bar/ of domain. The default value is the current directory that the cookie is being set
-     * in.
+     * If set to '/', the cookie will be available within the entire domain. If set to '/foo/', the cookie will only be
+     * available within the /foo/ directory and all sub-directories such as /foo/bar/ of domain. The default value is
+     * the current directory that the cookie is being set in.
      *
      * @var string|null
      */
-    private $path = null;
+    private $path;
 
     /**
-     * The domain that the cookie is available. To make the cookie available on all subdomains of
-     * example.com then you'd set it to '.example.com'. The . is not required but makes it
-     * compatible with more browsers. Setting it to www.example.com will make the cookie only
-     * available in the www subdomain. Refer to tail matching in the spec for details.
+     * The domain that the cookie is available. To make the cookie available on all subdomains ofexample.com then you'd
+     * set it to '.example.com'. The . is not required but makes itcompatible with more browsers. Setting it to
+     * www.example.com will make the cookie onlyavailable in the www subdomain. Refer to tail matching in the spec for
+     * details.
      *
      * @var string|null
      */
-    private $domain = null;
+    private $domain;
 
     /**
-     * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the
-     * client. When set to true, the cookie will only be set if a secure connection exists.
-     * On the server-side, it's on the programmer to send this kind of cookie only on secure
-     * connection
-     * (e.g. with respect to $_SERVER["HTTPS"]).
-     *
-     * @var bool|null
-     */
-    private $secure = null;
-
-    /**
-     * When true the cookie will be made accessible only through the HTTP protocol. This means that
-     * the cookie won't be accessible by scripting languages, such as JavaScript. This setting can
-     * effectively help to reduce identity theft through XSS attacks (although it is not supported
-     * by all browsers).
+     * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the client. When set to
+     * true, the cookie will only be set if a secure connection exists. On the server-side, it's on the programmer to
+     * send this kind of cookie only on secure connection (e.g. with respect to $_SERVER["HTTPS"]).
      *
      * @var bool
      */
-    private $httpOnly = true;
+    private $secure;
+
+    /**
+     * When true the cookie will be made accessible only through the HTTP protocol. This means that the cookie won't be
+     * accessible by scripting languages, such as JavaScript. This setting can effectively help to reduce identity
+     * theft through XSS attacks (although it is not supported by all browsers).
+     *
+     * @var bool
+     */
+    private $httpOnly;
+
+    /**
+     * The value of the samesite element should be either None, Lax or Strict. If any of the allowed options are not
+     * given, their default values are the same as the default values of the explicit parameters. If the samesite
+     * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
+     * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
+     *
+     * @var string|null
+     */
+    private $sameSite;
 
     /**
      * New Cookie instance, cookies used to schedule cookie set while dispatching Response.
      *
      * @link http://php.net/manual/en/function.setcookie.php
      *
-     * @param string $name     The name of the cookie.
-     * @param string $value    The value of the cookie. This value is stored on the clients
-     *                         computer; do not store sensitive information.
-     * @param int    $lifetime Cookie lifetime. This value specified in seconds and declares period
-     *                         of time in which cookie will expire relatively to current time()
-     *                         value.
-     * @param string $path     The path on the server in which the cookie will be available on.
-     *                         If set to '/', the cookie will be available within the entire
-     *                         domain.
-     *                         If set to '/foo/', the cookie will only be available within the
-     *                         /foo/
-     *                         directory and all sub-directories such as /foo/bar/ of domain. The
-     *                         default value is the current directory that the cookie is being set
-     *                         in.
-     * @param string $domain   The domain that the cookie is available. To make the cookie
-     *                         available
-     *                         on all subdomains of example.com then you'd set it to
-     *                         '.example.com'.
-     *                         The . is not required but makes it compatible with more browsers.
-     *                         Setting it to www.example.com will make the cookie only available in
-     *                         the www subdomain. Refer to tail matching in the spec for details.
-     * @param bool   $secure   Indicates that the cookie should only be transmitted over a secure
-     *                         HTTPS connection from the client. When set to true, the cookie will
-     *                         only be set if a secure connection exists. On the server-side, it's
-     *                         on the programmer to send this kind of cookie only on secure
-     *                         connection (e.g. with respect to $_SERVER["HTTPS"]).
-     * @param bool   $httpOnly When true the cookie will be made accessible only through the HTTP
-     *                         protocol. This means that the cookie won't be accessible by
-     *                         scripting
-     *                         languages, such as JavaScript. This setting can effectively help to
-     *                         reduce identity theft through XSS attacks (although it is not
-     *                         supported by all browsers).
+     * @param string      $name     The name of the cookie.
+     * @param string|null $value    The value of the cookie. This value is stored on the clients computer; do not store
+     *                              sensitive information.
+     * @param int|null    $lifetime Cookie lifetime. This value specified in seconds and declares period of time in
+     *                              which cookie will expire relatively to current time() value.
+     * @param string|null $path     The path on the server in which the cookie will be available on. If set to '/', the
+     *                              cookie will be available within the entire domain. If set to '/foo/', the cookie
+     *                              will only be available within the /foo/ directory and all sub-directories such as
+     *                              /foo/bar/ of domain. The default value is the current directory that the cookie is
+     *                              being set in.
+     * @param string|null $domain   The domain that the cookie is available. To make the cookie available on all
+     *                              subdomains of example.com then you'd set it to '.example.com'. The . is not
+     *                              required but makes it compatible with more browsers. Setting it to www.example.com
+     *                              will make the cookie only available in the www subdomain. Refer to tail matching in
+     *                              the spec for details.
+     * @param bool        $secure   Indicates that the cookie should only be transmitted over a secure HTTPS connection
+     *                              from the client. When set to true, the cookie will only be set if a secure
+     *                              connection exists. On the server-side, it's on the programmer to send this kind of
+     *                              cookie only on secure connection (e.g. with respect to $_SERVER["HTTPS"]).
+     * @param bool        $httpOnly When true the cookie will be made accessible only through the HTTP protocol. This
+     *                              means that the cookie won't be accessible by scripting languages, such as
+     *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
+     *                              attacks (although it is not supported by all browsers).
+     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     *                              the allowed options are not given, their default values are the same as the default
+     *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
+     *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
+     *                              to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
      */
     public function __construct(
         string $name,
-        string $value = null,
-        int $lifetime = null,
-        string $path = null,
-        string $domain = null,
+        ?string $value = null,
+        ?int $lifetime = null,
+        ?string $path = null,
+        ?string $domain = null,
         bool $secure = false,
-        bool $httpOnly = true
+        bool $httpOnly = true,
+        ?string $sameSite = null
     ) {
         $this->name = $name;
         $this->value = $value;
@@ -136,6 +141,7 @@ final class Cookie
         $this->domain = $domain;
         $this->secure = $secure;
         $this->httpOnly = $httpOnly;
+        $this->sameSite = $this->setSameSite($secure, $sameSite);
     }
 
     /**
@@ -157,8 +163,7 @@ final class Cookie
     }
 
     /**
-     * The value of the cookie. This value is stored on the clients computer; do not store sensitive
-     * information.
+     * The value of the cookie. This value is stored on the clients computer; do not store sensitive information.
      *
      * @return string|null
      */
@@ -168,12 +173,10 @@ final class Cookie
     }
 
     /**
-     * The path on the server in which the cookie will be available on.
-     *
-     * If set to '/', the cookie will be available within the entire domain. If set to '/foo/',
-     * the cookie will only be available within the /foo/ directory and all sub-directories such as
-     * /foo/bar/ of domain. The default value is the current directory that the cookie is being set
-     * in.
+     * The path on the server in which the cookie will be available on. If set to '/', the cookie will be available
+     * within the entire domain. If set to '/foo/', the cookie will only be available within the /foo/ directory and
+     * all sub-directories such as /foo/bar/ of domain. The default value is the current directory that the cookie is
+     * being set in.
      *
      * @return string|null
      */
@@ -183,10 +186,10 @@ final class Cookie
     }
 
     /**
-     * The domain that the cookie is available. To make the cookie available on all subdomains of
-     * example.com then you'd set it to '.example.com'. The . is not required but makes it
-     * compatible with more browsers. Setting it to www.example.com will make the cookie only
-     * available in the www subdomain. Refer to tail matching in the spec for details.
+     * The domain that the cookie is available. To make the cookie available on all subdomains of example.com then
+     * you'd set it to '.example.com'. The . is not required but makes it compatible with more browsers. Setting it to
+     * www.example.com will make the cookie only available in the www subdomain. Refer to tail matching in the spec for
+     * details.
      *
      * @return string|null
      */
@@ -196,11 +199,9 @@ final class Cookie
     }
 
     /**
-     * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the
-     * client. When set to true, the cookie will only be set if a secure connection exists.
-     * On the server-side, it's on the programmer to send this kind of cookie only on secure
-     * connection
-     * (e.g. with respect to $_SERVER["HTTPS"]).
+     * Indicates that the cookie should only be transmitted over a secure HTTPS connection from the client. When set to
+     * true, the cookie will only be set if a secure connection exists. On the server-side, it's on the programmer to
+     * send this kind of cookie only on secure connection (e.g. with respect to $_SERVER["HTTPS"]).
      *
      * @return bool
      */
@@ -210,10 +211,9 @@ final class Cookie
     }
 
     /**
-     * When true the cookie will be made accessible only through the HTTP protocol. This means that
-     * the cookie won't be accessible by scripting languages, such as JavaScript. This setting can
-     * effectively help to reduce identity theft through XSS attacks (although it is not supported
-     * by all browsers).
+     * When true the cookie will be made accessible only through the HTTP protocol. This means that the cookie won't be
+     * accessible by scripting languages, such as JavaScript. This setting can effectively help to reduce identity
+     * theft through XSS attacks (although it is not supported by all browsers).
      *
      * @return bool
      */
@@ -223,10 +223,22 @@ final class Cookie
     }
 
     /**
+     * The value of the samesite element should be either None, Lax or Strict. If any of the allowed options are not
+     * given, their default values are the same as the default values of the explicit parameters. If the samesite
+     * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
+     * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
+     *
+     * @return string
+     */
+    public function getSameSite(): ?string
+    {
+        return $this->sameSite;
+    }
+
+    /**
      * Get new cookie with altered value. Original cookie object should not be changed.
      *
      * @param string $value
-     *
      * @return Cookie
      */
     public function withValue(string $value): self
@@ -249,15 +261,15 @@ final class Cookie
 
         if ($this->lifetime !== null) {
             $header[] = 'Expires=' . gmdate(\DateTime::COOKIE, $this->getExpires());
-            $header[] = 'Max-Age=' . $this->lifetime;
+            $header[] = "Max-Age={$this->lifetime}";
         }
 
         if (!empty($this->path)) {
-            $header[] = 'Path=' . $this->path;
+            $header[] = "Path={$this->path}";
         }
 
         if (!empty($this->domain)) {
-            $header[] = 'Domain=' . $this->domain;
+            $header[] = "Domain={$this->domain}";
         }
 
         if ($this->secure) {
@@ -268,15 +280,17 @@ final class Cookie
             $header[] = 'HttpOnly';
         }
 
-        return join('; ', $header);
+        if ($this->sameSite !== null) {
+            $header[] = "SameSite={$this->sameSite}";
+        }
+
+        return implode('; ', $header);
     }
 
     /**
-     * The time the cookie expires. This is a Unix timestamp so is in number of seconds since the
-     * epoch. In other words, you'll most likely set this with the time function plus the number of
-     * seconds before you want it to expire. Or you might use mktime.
-     *
-     * Will return null if lifetime is not specified.
+     * The time the cookie expires. This is a Unix timestamp so is in number of seconds since the epoch. In other
+     * words, you'll most likely set this with the time function plus the number of seconds before you want it to
+     * expire. Or you might use mktime. Will return null if lifetime is not specified.
      *
      * @return int|null
      */
@@ -290,55 +304,69 @@ final class Cookie
     }
 
     /**
-     * New Cookie instance, cookies used to schedule cookie set while dispatching Response.
-     * Static constructor.
+     * New Cookie instance, cookies used to schedule cookie set while dispatching Response. Static constructor.
      *
      * @link http://php.net/manual/en/function.setcookie.php
      *
-     * @param string $name     The name of the cookie.
-     * @param string $value    The value of the cookie. This value is stored on the clients
-     *                         computer; do not store sensitive information.
-     * @param int    $lifetime Cookie lifetime. This value specified in seconds and declares period
-     *                         of time in which cookie will expire relatively to current time()
-     *                         value.
-     * @param string $path     The path on the server in which the cookie will be available on.
-     *                         If set to '/', the cookie will be available within the entire
-     *                         domain.
-     *                         If set to '/foo/', the cookie will only be available within the
-     *                         /foo/
-     *                         directory and all sub-directories such as /foo/bar/ of domain. The
-     *                         default value is the current directory that the cookie is being set
-     *                         in.
-     * @param string $domain   The domain that the cookie is available. To make the cookie
-     *                         available
-     *                         on all subdomains of example.com then you'd set it to
-     *                         '.example.com'.
-     *                         The . is not required but makes it compatible with more browsers.
-     *                         Setting it to www.example.com will make the cookie only available in
-     *                         the www subdomain. Refer to tail matching in the spec for details.
-     * @param bool   $secure   Indicates that the cookie should only be transmitted over a secure
-     *                         HTTPS connection from the client. When set to true, the cookie will
-     *                         only be set if a secure connection exists. On the server-side, it's
-     *                         on the programmer to send this kind of cookie only on secure
-     *                         connection (e.g. with respect to $_SERVER["HTTPS"]).
-     * @param bool   $httpOnly When true the cookie will be made accessible only through the HTTP
-     *                         protocol. This means that the cookie won't be accessible by
-     *                         scripting
-     *                         languages, such as JavaScript. This setting can effectively help to
-     *                         reduce identity theft through XSS attacks (although it is not
-     *                         supported by all browsers).
-     *
+     * @param string      $name     The name of the cookie.
+     * @param string|null $value    The value of the cookie. This value is stored on the clients computer; do not store
+     *                              sensitive information.
+     * @param int|null    $lifetime Cookie lifetime. This value specified in seconds and declares period of time in
+     *                              which cookie will expire relatively to current time() value.
+     * @param string|null $path     The path on the server in which the cookie will be available on. If set to '/', the
+     *                              cookie will be available within the entire domain. If set to '/foo/', the cookie
+     *                              will only be available within the /foo/ directory and all sub-directories such as
+     *                              /foo/bar/ of domain. The default value is the current directory that the cookie is
+     *                              being set in.
+     * @param string|null $domain   The domain that the cookie is available. To make the cookie available on all
+     *                              subdomains of example.com then you'd set it to '.example.com'. The . is not
+     *                              required but makes it compatible with more browsers. Setting it to www.example.com
+     *                              will make the cookie only available in the www subdomain. Refer to tail matching in
+     *                              the spec for details.
+     * @param bool        $secure   Indicates that the cookie should only be transmitted over a secure HTTPS connection
+     *                              from the client. When set to true, the cookie will only be set if a secure
+     *                              connection exists. On the server-side, it's on the programmer to send this kind of
+     *                              cookie only on secure connection (e.g. with respect to $_SERVER["HTTPS"]).
+     * @param bool        $httpOnly When true the cookie will be made accessible only through the HTTP protocol. This
+     *                              means that the cookie won't be accessible by scripting languages, such as
+     *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
+     *                              attacks (although it is not supported by all browsers).
+     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     *                              the allowed options are not given, their default values are the same as the default
+     *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
+     *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
+     *                              to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
      * @return Cookie
      */
     public static function create(
         string $name,
-        string $value = null,
-        int $lifetime = null,
-        string $path = null,
-        string $domain = null,
+        ?string $value = null,
+        ?int $lifetime = null,
+        ?string $path = null,
+        ?string $domain = null,
         bool $secure = false,
-        bool $httpOnly = true
+        bool $httpOnly = true,
+        ?string $sameSite = null
     ): self {
-        return new self($name, $value, $lifetime, $path, $domain, $secure, $httpOnly);
+        return new self($name, $value, $lifetime, $path, $domain, $secure, $httpOnly, $sameSite);
+    }
+
+    /**
+     * @param bool        $secure
+     * @param string|null $sameSite
+     * @return string|null
+     */
+    private function setSameSite(bool $secure, ?string $sameSite): ?string
+    {
+        if ($sameSite === null) {
+            return null;
+        }
+
+        $sameSite = ucfirst(strtolower($sameSite));
+        if (!in_array($sameSite, self::SAME_SITE_VALUES, true)) {
+            return null;
+        }
+
+        return ($sameSite === self::SAME_SITE_NONE && !$secure) ? self::SAME_SITE_DEFAULT : $sameSite;
     }
 }
