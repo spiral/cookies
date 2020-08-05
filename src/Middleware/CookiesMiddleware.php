@@ -30,10 +30,10 @@ use Spiral\Encrypter\Exception\EncryptException;
 final class CookiesMiddleware implements MiddlewareInterface
 {
     /** @var CookiesConfig */
-    private $config = null;
+    private $config;
 
     /** @var EncryptionInterface */
-    private $encryption = null;
+    private $encryption;
 
     /**
      * @param CookiesConfig       $config
@@ -53,7 +53,7 @@ final class CookiesMiddleware implements MiddlewareInterface
         //Aggregates all user cookies
         $queue = new CookieQueue(
             $this->config->resolveDomain($request->getUri()),
-            $request->getUri()->getScheme() == 'https'
+            $request->getUri()->getScheme() === 'https'
         );
 
         $response = $handler->handle(
@@ -92,12 +92,12 @@ final class CookiesMiddleware implements MiddlewareInterface
      */
     protected function isProtected(string $cookie): bool
     {
-        if (in_array($cookie, $this->config->getExcludedCookies())) {
+        if (in_array($cookie, $this->config->getExcludedCookies(), true)) {
             //Excluded
             return false;
         }
 
-        return $this->config->getProtectionMethod() != CookiesConfig::COOKIE_UNPROTECTED;
+        return $this->config->getProtectionMethod() !== CookiesConfig::COOKIE_UNPROTECTED;
     }
 
     /**
@@ -118,7 +118,7 @@ final class CookiesMiddleware implements MiddlewareInterface
         $cookies = $response->getHeader('Set-Cookie');
 
         foreach ($queue->getScheduled() as $cookie) {
-            if (!$this->isProtected($cookie->getName()) || empty($cookie->getValue())) {
+            if (empty($cookie->getValue()) || !$this->isProtected($cookie->getName())) {
                 $cookies[] = $cookie->createHeader();
                 continue;
             }
@@ -183,10 +183,10 @@ final class CookiesMiddleware implements MiddlewareInterface
      */
     private function encodeCookie(Cookie $cookie): Cookie
     {
-        if ($this->config->getProtectionMethod() == CookiesConfig::COOKIE_ENCRYPT) {
-            $encrypter = $this->encryption->getEncrypter();
+        if ($this->config->getProtectionMethod() === CookiesConfig::COOKIE_ENCRYPT) {
+            $encryptor = $this->encryption->getEncrypter();
 
-            return $cookie->withValue($encrypter->encrypt($cookie->getValue()));
+            return $cookie->withValue($encryptor->encrypt($cookie->getValue()));
         }
 
         //VALUE.HMAC
