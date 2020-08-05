@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Spiral\Cookies;
 
+use DateTime;
+
 /**
  * Represent singular cookie header value with packing abilities.
  */
@@ -118,7 +120,7 @@ final class Cookie
      *                              means that the cookie won't be accessible by scripting languages, such as
      *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
      *                              attacks (although it is not supported by all browsers).
-     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     * @param string|null $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
      *                              the allowed options are not given, their default values are the same as the default
      *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
      *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
@@ -260,7 +262,7 @@ final class Cookie
         $header = [rawurlencode($this->name) . '=' . rawurlencode((string)$this->value)];
 
         if ($this->lifetime !== null) {
-            $header[] = 'Expires=' . gmdate(\DateTime::COOKIE, $this->getExpires());
+            $header[] = 'Expires=' . gmdate(DateTime::COOKIE, $this->getExpires());
             $header[] = "Max-Age={$this->lifetime}";
         }
 
@@ -331,7 +333,7 @@ final class Cookie
      *                              means that the cookie won't be accessible by scripting languages, such as
      *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
      *                              attacks (although it is not supported by all browsers).
-     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     * @param string|null $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
      *                              the allowed options are not given, their default values are the same as the default
      *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
      *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
