@@ -28,7 +28,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Spiral\\Cookies\\Tests\\": "tests/"
+      "Spiral\\Tests\\": "tests/"
     }
   }
 }

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Cookies\Tests\Cookies;
+namespace Spiral\Tests\Cookies;
 
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
