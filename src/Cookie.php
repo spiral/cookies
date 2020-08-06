@@ -11,17 +11,11 @@ declare(strict_types=1);
 
 namespace Spiral\Cookies;
 
-use DateTime;
-
 /**
  * Represent singular cookie header value with packing abilities.
  */
 final class Cookie
 {
-    private const SAME_SITE_VALUES  = ['Strict', 'Lax', 'None'];
-    private const SAME_SITE_DEFAULT = 'Lax';
-    private const SAME_SITE_NONE    = 'None';
-
     /**
      * The name of the cookie.
      *
@@ -88,7 +82,7 @@ final class Cookie
      * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
      * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
      *
-     * @var string|null
+     * @var Cookie\SameSite
      */
     private $sameSite;
 
@@ -143,7 +137,7 @@ final class Cookie
         $this->domain = $domain;
         $this->secure = $secure;
         $this->httpOnly = $httpOnly;
-        $this->sameSite = $this->setSameSite($secure, $sameSite);
+        $this->sameSite = new Cookie\SameSite($sameSite, $secure);
     }
 
     /**
@@ -225,19 +219,6 @@ final class Cookie
     }
 
     /**
-     * The value of the samesite element should be either None, Lax or Strict. If any of the allowed options are not
-     * given, their default values are the same as the default values of the explicit parameters. If the samesite
-     * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
-     * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
-     *
-     * @return string
-     */
-    public function getSameSite(): ?string
-    {
-        return $this->sameSite;
-    }
-
-    /**
      * Get new cookie with altered value. Original cookie object should not be changed.
      *
      * @param string $value
@@ -262,7 +243,7 @@ final class Cookie
         $header = [rawurlencode($this->name) . '=' . rawurlencode((string)$this->value)];
 
         if ($this->lifetime !== null) {
-            $header[] = 'Expires=' . gmdate(DateTime::COOKIE, $this->getExpires());
+            $header[] = 'Expires=' . gmdate(\DateTime::COOKIE, $this->getExpires());
             $header[] = "Max-Age={$this->lifetime}";
         }
 
@@ -282,8 +263,8 @@ final class Cookie
             $header[] = 'HttpOnly';
         }
 
-        if ($this->sameSite !== null) {
-            $header[] = "SameSite={$this->sameSite}";
+        if ($this->sameSite->get() !== null) {
+            $header[] = "SameSite={$this->sameSite->get()}";
         }
 
         return implode('; ', $header);
@@ -351,24 +332,5 @@ final class Cookie
         ?string $sameSite = null
     ): self {
         return new self($name, $value, $lifetime, $path, $domain, $secure, $httpOnly, $sameSite);
-    }
-
-    /**
-     * @param bool        $secure
-     * @param string|null $sameSite
-     * @return string|null
-     */
-    private function setSameSite(bool $secure, ?string $sameSite): ?string
-    {
-        if ($sameSite === null) {
-            return null;
-        }
-
-        $sameSite = ucfirst(strtolower($sameSite));
-        if (!in_array($sameSite, self::SAME_SITE_VALUES, true)) {
-            return null;
-        }
-
-        return ($sameSite === self::SAME_SITE_NONE && !$secure) ? self::SAME_SITE_DEFAULT : $sameSite;
     }
 }
