@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Http\Tests;
+namespace Spiral\Tests\Cookies;
 
 use PHPUnit\Framework\TestCase;
 use Spiral\Cookies\Config\CookiesConfig;

@@ -16,10 +16,6 @@ namespace Spiral\Cookies;
  */
 final class Cookie
 {
-    private const SAME_SITE_VALUES  = ['Strict', 'Lax', 'None'];
-    private const SAME_SITE_DEFAULT = 'Lax';
-    private const SAME_SITE_NONE    = 'None';
-
     /**
      * The name of the cookie.
      *
@@ -86,7 +82,7 @@ final class Cookie
      * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
      * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
      *
-     * @var string|null
+     * @var Cookie\SameSite
      */
     private $sameSite;
 
@@ -118,7 +114,7 @@ final class Cookie
      *                              means that the cookie won't be accessible by scripting languages, such as
      *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
      *                              attacks (although it is not supported by all browsers).
-     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     * @param string|null $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
      *                              the allowed options are not given, their default values are the same as the default
      *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
      *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
@@ -141,7 +137,7 @@ final class Cookie
         $this->domain = $domain;
         $this->secure = $secure;
         $this->httpOnly = $httpOnly;
-        $this->sameSite = $this->setSameSite($secure, $sameSite);
+        $this->sameSite = new Cookie\SameSite($sameSite, $secure);
     }
 
     /**
@@ -232,7 +228,7 @@ final class Cookie
      */
     public function getSameSite(): ?string
     {
-        return $this->sameSite;
+        return $this->sameSite->get();
     }
 
     /**
@@ -280,8 +276,8 @@ final class Cookie
             $header[] = 'HttpOnly';
         }
 
-        if ($this->sameSite !== null) {
-            $header[] = "SameSite={$this->sameSite}";
+        if ($this->sameSite->get() !== null) {
+            $header[] = "SameSite={$this->sameSite->get()}";
         }
 
         return implode('; ', $header);
@@ -331,7 +327,7 @@ final class Cookie
      *                              means that the cookie won't be accessible by scripting languages, such as
      *                              JavaScript. This setting can effectively help to reduce identity theft through XSS
      *                              attacks (although it is not supported by all browsers).
-     * @param string      $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
+     * @param string|null $sameSite The value of the samesite element should be either None, Lax or Strict. If any of
      *                              the allowed options are not given, their default values are the same as the default
      *                              values of the explicit parameters. If the samesite element is omitted, no SameSite
      *                              cookie attribute is set. When Same-Site attribute is set to "None" it is required
@@ -349,24 +345,5 @@ final class Cookie
         ?string $sameSite = null
     ): self {
         return new self($name, $value, $lifetime, $path, $domain, $secure, $httpOnly, $sameSite);
-    }
-
-    /**
-     * @param bool        $secure
-     * @param string|null $sameSite
-     * @return string|null
-     */
-    private function setSameSite(bool $secure, ?string $sameSite): ?string
-    {
-        if ($sameSite === null) {
-            return null;
-        }
-
-        $sameSite = ucfirst(strtolower($sameSite));
-        if (!in_array($sameSite, self::SAME_SITE_VALUES, true)) {
-            return null;
-        }
-
-        return ($sameSite === self::SAME_SITE_NONE && !$secure) ? self::SAME_SITE_DEFAULT : $sameSite;
     }
 }

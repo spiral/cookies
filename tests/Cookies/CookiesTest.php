@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace Spiral\Cookies\Tests;
+namespace Spiral\Tests\Cookies;
 
 use Defuse\Crypto\Key;
 use PHPUnit\Framework\TestCase;
@@ -18,7 +18,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Spiral\Cookies\Config\CookiesConfig;
 use Spiral\Cookies\CookieQueue;
 use Spiral\Cookies\Middleware\CookiesMiddleware;
-use Spiral\Cookies\Tests\Cookies\TestResponseFactory;
 use Spiral\Core\Container;
 use Spiral\Encrypter\Config\EncrypterConfig;
 use Spiral\Encrypter\Encrypter;
