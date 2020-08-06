@@ -219,6 +219,19 @@ final class Cookie
     }
 
     /**
+     * The value of the samesite element should be either None, Lax or Strict. If any of the allowed options are not
+     * given, their default values are the same as the default values of the explicit parameters. If the samesite
+     * element is omitted, no SameSite cookie attribute is set. When Same-Site attribute is set to "None" it is
+     * required to have "Secure" attribute enable. Otherwise it will be converted to "Lax".
+     *
+     * @return string
+     */
+    public function getSameSite(): ?string
+    {
+        return $this->sameSite->get();
+    }
+
+    /**
      * Get new cookie with altered value. Original cookie object should not be changed.
      *
      * @param string $value

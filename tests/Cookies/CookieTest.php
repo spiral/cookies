@@ -125,6 +125,8 @@ class CookieTest extends TestCase
     public function testSameSite($expected, bool $secure, ?string $sameSite): void
     {
         $cookie = new Cookie('', '', 0, '', '', $secure, false, $sameSite);
+        $this->assertSame($expected, $cookie->getSameSite());
+
         if ($expected === null) {
             $this->assertStringNotContainsString('SameSite=', $cookie->createHeader());
         } else {
