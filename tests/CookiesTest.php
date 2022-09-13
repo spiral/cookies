@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Spiral Framework.
- *
- * @license   MIT
- * @author    Anton Titov (Wolfy-J)
- */
-
 declare(strict_types=1);
 
 namespace Spiral\Tests\Cookies;
@@ -27,7 +20,7 @@ use Spiral\Encrypter\EncryptionInterface;
 use Spiral\Http\Config\HttpConfig;
 use Spiral\Http\Http;
 use Spiral\Http\Pipeline;
-use Laminas\Diactoros\ServerRequest;
+use Nyholm\Psr7\ServerRequest;
 
 class CookiesTest extends TestCase
 {
@@ -310,16 +303,11 @@ class CookiesTest extends TestCase
         array $headers = [],
         array $cookies = []
     ): ServerRequest {
-        return new ServerRequest(
-            [],
-            [],
-            $uri,
-            $method,
-            'php://input',
-            $headers,
-            $cookies,
-            $query
-        );
+        $request = new ServerRequest($method, $uri, $headers, 'php://input');
+
+        return $request
+            ->withQueryParams($query)
+            ->withCookieParams($cookies);
     }
 
     protected function fetchCookies(ResponseInterface $response)

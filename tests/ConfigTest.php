@@ -1,19 +1,12 @@
 <?php
 
-/**
- * Spiral Framework.
- *
- * @license   MIT
- * @author    Anton Titov (Wolfy-J)
- */
-
 declare(strict_types=1);
 
 namespace Spiral\Tests\Cookies;
 
 use PHPUnit\Framework\TestCase;
 use Spiral\Cookies\Config\CookiesConfig;
-use Laminas\Diactoros\Uri;
+use Nyholm\Psr7\Uri;
 
 class ConfigTest extends TestCase
 {
