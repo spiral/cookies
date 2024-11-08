@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Spiral\Cookies;
 
-use Spiral\Cookies\Middleware\CookiesMiddleware;
 use Spiral\Core\Attribute\Scope;
 
-/**
- * @note The CookieQueue might be accessed in the http scope after the {@see CookiesMiddleware} has been executed,
- *       but don't store this class in stateful services, which are not isolated in the http-request scope.
- */
-#[Scope('http-request')]
+#[Scope('http')]
 final class CookieQueue
 {
     public const ATTRIBUTE = 'cookieQueue';
