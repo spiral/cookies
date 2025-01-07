@@ -22,12 +22,12 @@ class CookieTest extends TestCase
             true
         );
 
-        self::assertSame('cookie', $cookie->getName());
-        self::assertSame('value', $cookie->getValue());
-        self::assertSame(time() + 100, $cookie->getExpires());
-        self::assertSame('.domain.com', $cookie->getDomain());
-        self::assertTrue($cookie->isSecure());
-        self::assertTrue($cookie->isHttpOnly());
+        $this->assertSame('cookie', $cookie->getName());
+        $this->assertSame('value', $cookie->getValue());
+        $this->assertSame(time() + 100, $cookie->getExpires());
+        $this->assertSame('.domain.com', $cookie->getDomain());
+        $this->assertTrue($cookie->isSecure());
+        $this->assertTrue($cookie->isHttpOnly());
     }
 
     public function testCreateStaticAccess(): void
@@ -42,12 +42,12 @@ class CookieTest extends TestCase
             true
         );
 
-        self::assertSame('cookie', $cookie->getName());
-        self::assertSame('value', $cookie->getValue());
-        self::assertSame(time() + 100, $cookie->getExpires());
-        self::assertSame('.domain.com', $cookie->getDomain());
-        self::assertTrue($cookie->isSecure());
-        self::assertTrue($cookie->isHttpOnly());
+        $this->assertSame('cookie', $cookie->getName());
+        $this->assertSame('value', $cookie->getValue());
+        $this->assertSame(time() + 100, $cookie->getExpires());
+        $this->assertSame('.domain.com', $cookie->getDomain());
+        $this->assertTrue($cookie->isSecure());
+        $this->assertTrue($cookie->isHttpOnly());
     }
 
     public function testFallbackValues(): void
@@ -62,9 +62,9 @@ class CookieTest extends TestCase
             true
         );
 
-        self::assertNull($cookie->getExpires());
-        self::assertNull($cookie->getPath());
-        self::assertNull($cookie->getDomain());
+        $this->assertNull($cookie->getExpires());
+        $this->assertNull($cookie->getPath());
+        $this->assertNull($cookie->getDomain());
     }
 
     public function testWithValue(): void
@@ -81,9 +81,9 @@ class CookieTest extends TestCase
 
         $cookie1 = $cookie->withValue('new-value');
 
-        self::assertNotSame($cookie, $cookie1);
-        self::assertSame('value', $cookie->getValue());
-        self::assertSame('new-value', $cookie1->getValue());
+        $this->assertNotSame($cookie, $cookie1);
+        $this->assertSame('value', $cookie->getValue());
+        $this->assertSame('new-value', $cookie1->getValue());
     }
 
     public function testPack(): void
@@ -98,22 +98,28 @@ class CookieTest extends TestCase
             true
         );
 
-        self::assertSame($cookie->createHeader(), (string)$cookie);
-        self::assertStringContainsString('cookie=value;', $cookie->createHeader());
+        $this->assertSame($cookie->createHeader(), (string)$cookie);
+        $this->assertStringContainsString(
+            'cookie=value;',
+            $cookie->createHeader()
+        );
 
-        self::assertStringContainsString('Max-Age=100; Path=/; Domain=.domain.com; Secure; HttpOnly', $cookie->createHeader());
+        $this->assertStringContainsString(
+            'Max-Age=100; Path=/; Domain=.domain.com; Secure; HttpOnly',
+            $cookie->createHeader()
+        );
     }
 
     #[DataProvider('sameSiteProvider')]
     public function testSameSite(?string $expected, bool $secure, ?string $sameSite): void
     {
         $cookie = new Cookie('', '', 0, '', '', $secure, false, $sameSite);
-        self::assertSame($expected, $cookie->getSameSite());
+        $this->assertSame($expected, $cookie->getSameSite());
 
         if ($expected === null) {
-            self::assertStringNotContainsString('SameSite=', $cookie->createHeader());
+            $this->assertStringNotContainsString('SameSite=', $cookie->createHeader());
         } else {
-            self::assertStringContainsString("SameSite=$expected", $cookie->createHeader());
+            $this->assertStringContainsString("SameSite=$expected", $cookie->createHeader());
         }
     }
 
