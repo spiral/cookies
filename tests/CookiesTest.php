@@ -27,78 +27,53 @@ final class CookiesTest extends TestCase
 {
     private Container $container;
 
-    public function setUp(): void
-    {
-        $options = new Options();
-        $options->checkScope = false;
-        $this->container = new Container(options: $options);
-        $this->container->bind(CookiesConfig::class, new CookiesConfig([
-            'domain'   => '.%s',
-            'method'   => CookiesConfig::COOKIE_ENCRYPT,
-            'excluded' => ['PHPSESSID', 'csrf-token']
-        ]));
-
-        $this->container->bind(
-            EncrypterFactory::class,
-            new EncrypterFactory(new EncrypterConfig([
-                'key' => Key::createNewRandomKey()->saveToAsciiSafeString()
-            ]))
-        );
-
-        $this->container->bind(EncryptionInterface::class, EncrypterFactory::class);
-        $this->container->bind(EncrypterInterface::class, Encrypter::class);
-    }
-
     public function testCookieQueueInRequestAttribute(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
-            $this->assertInstanceOf(CookieQueue::class, $r->getAttribute(CookieQueue::ATTRIBUTE));
+        $core->setHandler(function (ServerRequestInterface $r): string {
+            self::assertInstanceOf(CookieQueue::class, $r->getAttribute(CookieQueue::ATTRIBUTE));
             return 'all good';
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
     }
 
     public function testSetEncryptedCookie(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
+        $core->setHandler(function (ServerRequestInterface $r): string {
             $r->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
 
         $cookies = $this->fetchCookies($response);
-        $this->assertArrayHasKey('name', $cookies);
-        $this->assertSame(
-            'value',
-            $this->container->get(EncrypterInterface::class)->decrypt($cookies['name'])
-        );
+        self::assertArrayHasKey('name', $cookies);
+        self::assertSame('value', $this->container->get(EncrypterInterface::class)->decrypt($cookies['name']));
     }
 
     public function testSetNotProtectedCookie(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
+        $core->setHandler(function (ServerRequestInterface $r): string {
             $r->getAttribute(CookieQueue::ATTRIBUTE)->set('PHPSESSID', 'value');
 
             return 'all good';
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
 
         $cookies = $this->fetchCookies($response);
-        $this->assertArrayHasKey('PHPSESSID', $cookies);
-        $this->assertSame('value', $cookies['PHPSESSID']);
+        self::assertArrayHasKey('PHPSESSID', $cookies);
+        self::assertSame('value', $cookies['PHPSESSID']);
     }
 
     public function testDecrypt(): void
@@ -109,8 +84,8 @@ final class CookiesTest extends TestCase
         $value = $this->container->get(EncrypterInterface::class)->encrypt('cookie-value');
 
         $response = $this->get($core, '/', [], [], ['name' => $value]);
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('cookie-value', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('cookie-value', (string) $response->getBody());
     }
 
     public function testDecryptArray(): void
@@ -121,8 +96,8 @@ final class CookiesTest extends TestCase
         $value[] = $this->container->get(EncrypterInterface::class)->encrypt('cookie-value');
 
         $response = $this->get($core, '/', [], [], ['name' => $value]);
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('cookie-value', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('cookie-value', (string) $response->getBody());
     }
 
     public function testDecryptBroken(): void
@@ -133,14 +108,14 @@ final class CookiesTest extends TestCase
         $value = $this->container->get(EncrypterInterface::class)->encrypt('cookie-value') . 'BROKEN';
 
         $response = $this->get($core, '/', [], [], ['name' => $value]);
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('', (string) $response->getBody());
     }
 
     public function testDelete(): void
     {
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
+        $core->setHandler(function (ServerRequestInterface $r): string {
             $r->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
             $r->getAttribute(CookieQueue::ATTRIBUTE)->delete('name');
 
@@ -148,12 +123,12 @@ final class CookiesTest extends TestCase
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
 
         $cookies = $this->fetchCookies($response);
-        $this->assertArrayHasKey('name', $cookies);
-        $this->assertSame('', $cookies['name']);
+        self::assertArrayHasKey('name', $cookies);
+        self::assertSame('', $cookies['name']);
     }
 
     public function testUnprotected(): void
@@ -161,23 +136,23 @@ final class CookiesTest extends TestCase
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
             'method'   => CookiesConfig::COOKIE_UNPROTECTED,
-            'excluded' => ['PHPSESSID', 'csrf-token']
+            'excluded' => ['PHPSESSID', 'csrf-token'],
         ]));
 
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
+        $core->setHandler(function (ServerRequestInterface $r): string {
             $r->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
 
         $cookies = $this->fetchCookies($response);
-        $this->assertArrayHasKey('name', $cookies);
-        $this->assertSame('value', $cookies['name']);
+        self::assertArrayHasKey('name', $cookies);
+        self::assertSame('value', $cookies['name']);
     }
 
     public function testGetUnprotected(): void
@@ -185,7 +160,7 @@ final class CookiesTest extends TestCase
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
             'method'   => CookiesConfig::COOKIE_UNPROTECTED,
-            'excluded' => ['PHPSESSID', 'csrf-token']
+            'excluded' => ['PHPSESSID', 'csrf-token'],
         ]));
 
         $core = $this->httpCore([CookiesMiddleware::class]);
@@ -194,8 +169,8 @@ final class CookiesTest extends TestCase
         $value = 'cookie-value';
 
         $response = $this->get($core, '/', [], [], ['name' => $value]);
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('cookie-value', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('cookie-value', (string) $response->getBody());
     }
 
     public function testHMAC(): void
@@ -203,28 +178,50 @@ final class CookiesTest extends TestCase
         $this->container->bind(CookiesConfig::class, new CookiesConfig([
             'domain'   => '.%s',
             'method'   => CookiesConfig::COOKIE_HMAC,
-            'excluded' => ['PHPSESSID', 'csrf-token']
+            'excluded' => ['PHPSESSID', 'csrf-token'],
         ]));
 
         $core = $this->httpCore([CookiesMiddleware::class]);
-        $core->setHandler(function (ServerRequestInterface $r) {
+        $core->setHandler(function (ServerRequestInterface $r): string {
             $r->getAttribute(CookieQueue::ATTRIBUTE)->set('name', 'value');
 
             return 'all good';
         });
 
         $response = $this->get($core, '/');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('all good', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('all good', (string) $response->getBody());
 
         $cookies = $this->fetchCookies($response);
-        $this->assertArrayHasKey('name', $cookies);
+        self::assertArrayHasKey('name', $cookies);
 
         $core->setHandler(fn($r) => $r->getCookieParams()['name']);
 
         $response = $this->get($core, '/', [], [], $cookies);
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('value', (string)$response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('value', (string) $response->getBody());
+    }
+
+    protected function setUp(): void
+    {
+        $options = new Options();
+        $options->checkScope = false;
+        $this->container = new Container(options: $options);
+        $this->container->bind(CookiesConfig::class, new CookiesConfig([
+            'domain'   => '.%s',
+            'method'   => CookiesConfig::COOKIE_ENCRYPT,
+            'excluded' => ['PHPSESSID', 'csrf-token'],
+        ]));
+
+        $this->container->bind(
+            EncrypterFactory::class,
+            new EncrypterFactory(new EncrypterConfig([
+                'key' => Key::createNewRandomKey()->saveToAsciiSafeString(),
+            ])),
+        );
+
+        $this->container->bind(EncryptionInterface::class, EncrypterFactory::class);
+        $this->container->bind(EncrypterInterface::class, Encrypter::class);
     }
 
     private function httpCore(array $middleware = []): Http
@@ -232,16 +229,16 @@ final class CookiesTest extends TestCase
         $config = new HttpConfig([
             'basePath'   => '/',
             'headers'    => [
-                'Content-Type' => 'text/html; charset=UTF-8'
+                'Content-Type' => 'text/html; charset=UTF-8',
             ],
-            'middleware' => $middleware
+            'middleware' => $middleware,
         ]);
 
         return new Http(
             $config,
             new Pipeline($this->container),
             new TestResponseFactory($config),
-            $this->container
+            $this->container,
         );
     }
 
@@ -250,7 +247,7 @@ final class CookiesTest extends TestCase
         string $uri,
         array $query = [],
         array $headers = [],
-        array $cookies = []
+        array $cookies = [],
     ): ResponseInterface {
         return $core->handle($this->request($uri, 'GET', $query, $headers, $cookies));
     }
@@ -260,7 +257,7 @@ final class CookiesTest extends TestCase
         string $method,
         array $query = [],
         array $headers = [],
-        array $cookies = []
+        array $cookies = [],
     ): ServerRequest {
         $request = new ServerRequest($method, $uri, $headers, 'php://input');
 
@@ -278,7 +275,7 @@ final class CookiesTest extends TestCase
             $result[$cookie[0]] = rawurldecode(substr(
                 $cookie[1],
                 0,
-                (int)strpos($cookie[1], ';')
+                (int) strpos($cookie[1], ';'),
             ));
         }
 
