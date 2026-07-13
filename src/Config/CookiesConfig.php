@@ -15,6 +15,7 @@ final class CookiesConfig extends InjectableConfig
      * Cookie protection methods.
      */
     public const COOKIE_UNPROTECTED = 0;
+
     public const COOKIE_ENCRYPT     = 1;
     public const COOKIE_HMAC        = 2;
 
@@ -52,10 +53,10 @@ final class CookiesConfig extends InjectableConfig
 
         if ($host === 'localhost' || \filter_var($host, FILTER_VALIDATE_IP)) {
             //We can't use sub-domains when website required by IP
-            $pattern = \ltrim($pattern, '.');
+            $pattern = \ltrim((string) $pattern, '.');
         }
 
-        if (!str_contains((string) $pattern, '%s')) {
+        if (!\str_contains((string) $pattern, '%s')) {
             //Forced domain
             return $pattern;
         }
