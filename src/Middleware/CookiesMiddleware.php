@@ -24,19 +24,20 @@ final class CookiesMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private readonly CookiesConfig $config,
-        private readonly EncryptionInterface $encryption,
-    ) {}
+        private readonly EncryptionInterface $encryption
+    ) {
+    }
 
     public function process(Request $request, RequestHandlerInterface $handler): Response
     {
         //Aggregates all user cookies
         $queue = new CookieQueue(
             $this->config->resolveDomain($request->getUri()),
-            $request->getUri()->getScheme() === 'https',
+            $request->getUri()->getScheme() === 'https'
         );
 
         $response = $handler->handle(
-            $this->unpackCookies($request)->withAttribute(CookieQueue::ATTRIBUTE, $queue),
+            $this->unpackCookies($request)->withAttribute(CookieQueue::ATTRIBUTE, $queue)
         );
 
         return $this->packCookies($response, $queue);
@@ -102,7 +103,7 @@ final class CookiesMiddleware implements MiddlewareInterface
     {
         try {
             if (\is_array($cookie)) {
-                return \array_map($this->decodeCookie(...), $cookie);
+                return \array_map(fn (array|string $cookie) => $this->decodeCookie($cookie), $cookie);
             }
         } catch (DecryptException) {
             return null;
@@ -135,7 +136,7 @@ final class CookiesMiddleware implements MiddlewareInterface
         return \hash_hmac(
             CookiesConfig::HMAC_ALGORITHM,
             $value,
-            $this->encryption->getKey(),
+            $this->encryption->getKey()
         );
     }
 

@@ -4,14 +4,6 @@ declare(strict_types=1);
 
 namespace Spiral\Cookies;
 
-use Spiral\Cookies\Middleware\CookiesMiddleware;
-use Spiral\Core\Attribute\Scope;
-
-/**
- * @note The CookieQueue might be accessed in the http scope after the {@see CookiesMiddleware} has been executed,
- *       but don't store this class in stateful services, which are not isolated in the http-request scope.
- */
-#[Scope('http-request')]
 final class CookieQueue
 {
     public const ATTRIBUTE = 'cookieQueue';
@@ -21,8 +13,9 @@ final class CookieQueue
 
     public function __construct(
         private readonly ?string $domain = null,
-        private readonly bool $secure = false,
-    ) {}
+        private readonly bool $secure = false
+    ) {
+    }
 
     /**
      * Schedule new cookie. Cookie will be send while dispatching request.
@@ -72,13 +65,13 @@ final class CookieQueue
      */
     public function set(
         string $name,
-        ?string $value = null,
-        ?int $lifetime = null,
-        ?string $path = null,
-        ?string $domain = null,
-        ?bool $secure = null,
+        string $value = null,
+        int $lifetime = null,
+        string $path = null,
+        string $domain = null,
+        bool $secure = null,
         bool $httpOnly = true,
-        ?string $sameSite = null,
+        ?string $sameSite = null
     ): self {
         if (\is_null($domain)) {
             //Let's resolve domain via config
@@ -90,7 +83,7 @@ final class CookieQueue
         }
 
         return $this->schedule(
-            new Cookie($name, $value, $lifetime, $path, $domain, $secure, $httpOnly, $sameSite),
+            new Cookie($name, $value, $lifetime, $path, $domain, $secure, $httpOnly, $sameSite)
         );
     }
 
